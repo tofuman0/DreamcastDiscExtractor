@@ -1,6 +1,7 @@
 #include "image.hpp"
 #include "font.hpp"
 #include "icon.hpp"
+#include "cli.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -299,8 +300,12 @@ void Start(App& app)
 }
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
+    if (argc > 1)
+    {
+        return RunCommandLine(argc, argv);
+    }
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
         return 1;

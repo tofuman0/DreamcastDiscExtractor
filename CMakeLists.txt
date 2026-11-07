@@ -48,7 +48,7 @@ file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/app_icon_data.hpp" "#pragma once\ninline
 add_library(disc_reader STATIC gdi.cpp cue.cpp chd.cpp cdi.cpp image.cpp)
 target_link_libraries(disc_reader PRIVATE chdr-static)
 target_include_directories(disc_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-add_executable(disc_extractor WIN32 main.cpp font.cpp icon.cpp)
+add_executable(disc_extractor WIN32 main.cpp font.cpp icon.cpp cli.cpp)
 if(WIN32)
   set(ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.ico")
   configure_file(icon.rc.in "${CMAKE_CURRENT_BINARY_DIR}/icon.rc" @ONLY)
