@@ -29,8 +29,6 @@ struct App
     int32_t m_EditField = 0;
     float m_Width = 960;
     float m_Height = 680;
-    float m_Left = 0;
-    float m_Top = 0;
     std::string m_Message = "Choose a disc image to begin.";
     std::unique_ptr<DiscExtractor::Image> m_Image;
     DiscExtractor::Progress m_Progress;
@@ -120,10 +118,6 @@ void Render(App& app)
 
     SDL_SetRenderDrawColor(app.m_Renderer, 7, 14, 25, 255);
     SDL_RenderClear(app.m_Renderer);
-    const SDL_Rect viewport{static_cast<int32_t>(app.m_Left), static_cast<int32_t>(app.m_Top),
-                            static_cast<int32_t>(width), static_cast<int32_t>(height)};
-    SDL_SetRenderViewport(app.m_Renderer, &viewport);
-
     DrawRect(app.m_Renderer, 0, 0, width, 78, 18, 29, 46);
     DrawRect(app.m_Renderer, 0, 76, width, 2, 235, 117, 31);
     DrawRect(app.m_Renderer, 24, 18, 7, 37, 242, 126, 32);
@@ -207,7 +201,6 @@ void Render(App& app)
     DrawButton(app, width - 322, buttonY, 140, 40, "Extract", app.m_Image && !app.m_Working, true);
     DrawButton(app, width - 168, buttonY, 144, 40, "Abort", app.m_Working);
     SDL_RenderPresent(app.m_Renderer);
-    SDL_SetRenderViewport(app.m_Renderer, nullptr);
 }
 
 void SDLCALL SelectInput(void* userdata, const char* const* paths, int32_t)
@@ -344,13 +337,16 @@ int main(int argc, char** argv)
         int32_t windowWidth = 0;
         int32_t windowHeight = 0;
         SDL_GetWindowSize(app.m_Window, &windowWidth, &windowHeight);
-        const float scale = std::min(1.25f, std::min(static_cast<float>(windowWidth) / 960, static_cast<float>(windowHeight) / 680));
+        if (windowWidth <= 0 || windowHeight <= 0)
+        {
+            windowWidth = 960;
+            windowHeight = 680;
+        }
+        const float scale = std::min(static_cast<float>(windowWidth) / 960, static_cast<float>(windowHeight) / 680);
         const int32_t logicalWidth = static_cast<int32_t>(windowWidth / scale);
         const int32_t logicalHeight = static_cast<int32_t>(windowHeight / scale);
-        app.m_Width = std::min(1100.0f, static_cast<float>(logicalWidth));
-        app.m_Height = std::min(760.0f, static_cast<float>(logicalHeight));
-        app.m_Left = (logicalWidth - app.m_Width) * 0.5f;
-        app.m_Top = std::min(40.0f, (logicalHeight - app.m_Height) * 0.5f);
+        app.m_Width = static_cast<float>(logicalWidth);
+        app.m_Height = static_cast<float>(logicalHeight);
         SDL_SetRenderLogicalPresentation(app.m_Renderer, logicalWidth, logicalHeight, SDL_LOGICAL_PRESENTATION_STRETCH);
         SDL_Event event;
         while (SDL_PollEvent(&event))
@@ -409,8 +405,8 @@ int main(int argc, char** argv)
             }
             else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && event.button.button == SDL_BUTTON_LEFT)
             {
-                const float x = event.button.x - app.m_Left;
-                const float y = event.button.y - app.m_Top;
+                const float x = event.button.x;
+                const float y = event.button.y;
                 if (!app.m_Working && !app.m_DialogOpen && x >= 38 && x < app.m_Width - 182 && y >= 128 && y <= 160)
                 {
                     app.m_EditField = 1;
