@@ -81,9 +81,9 @@ void DrawButton(App& app, float x, float y, float width, float height, const std
              label, 0.9f, enabled ? 239 : 127, enabled ? 245 : 143, enabled ? 253 : 165);
 }
 
-std::string ShortenPath(const Font& font, const std::string& text, float maxWidth)
+std::string ShortenPath(const Font& font, const std::string& text, float maxWidth, float scale = 1.0f)
 {
-    if (font.Measure(text) <= maxWidth)
+    if (font.Measure(text, scale) <= maxWidth)
     {
         return text;
     }
@@ -96,7 +96,7 @@ std::string ShortenPath(const Font& font, const std::string& text, float maxWidt
             start++;
         }
         const std::string shortened = "..." + text.substr(start);
-        if (font.Measure(shortened) <= maxWidth)
+        if (font.Measure(shortened, scale) <= maxWidth)
         {
             return shortened;
         }
@@ -127,17 +127,15 @@ void Render(App& app)
 
     DrawPanel(app, 24, 90, width - 48, 76, "ROM IN  /  GDI  -  CUE  -  BIN  -  CHD  -  CDI");
     DrawRect(app.m_Renderer, 38, 132, width - 220, 26, 7, 15, 27);
-    const float pathLimit = width - 245;
-    const std::string input = app.m_Input.empty() ? "Choose an image" : ShortenPath(*app.m_Font, app.m_Input, pathLimit);
-    const float inputX = app.m_Input.empty() ? 46 : width - 190 - app.m_Font->Measure(input, 0.9f);
-    DrawText(app, std::max(46.0f, inputX), 136, input, 0.9f);
+    const float pathLimit = width - 236;
+    const std::string input = app.m_Input.empty() ? "Choose an image" : ShortenPath(*app.m_Font, app.m_Input, pathLimit, 0.9f);
+    DrawText(app, 46, 136, input, 0.9f);
     DrawButton(app, width - 166, 128, 128, 32, "Browse", !app.m_Working);
 
     DrawPanel(app, 24, 176, width - 48, 76, "DATA OUT");
     DrawRect(app.m_Renderer, 38, 218, width - 220, 26, 7, 15, 27);
-    const std::string output = app.m_Output.empty() ? "Choose a folder" : ShortenPath(*app.m_Font, app.m_Output, pathLimit);
-    const float outputX = app.m_Output.empty() ? 46 : width - 190 - app.m_Font->Measure(output, 0.9f);
-    DrawText(app, std::max(46.0f, outputX), 222, output, 0.9f);
+    const std::string output = app.m_Output.empty() ? "Choose a folder" : ShortenPath(*app.m_Font, app.m_Output, pathLimit, 0.9f);
+    DrawText(app, 46, 222, output, 0.9f);
     DrawButton(app, width - 166, 214, 128, 32, "Browse", !app.m_Working);
 
     DrawPanel(app, 24, 264, leftWidth, 250, "ROM DETAILS");
