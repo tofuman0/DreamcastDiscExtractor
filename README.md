@@ -1,8 +1,8 @@
 # Dreamcast Disc Extractor
 
 This standalone utility extracts files from user-supplied Dreamcast disc images.
-It does not include game data. The app is in development and needs testing with
-real images on Windows and Linux.
+It does not include game data. The app is in development. Windows and Linux builds pass; real-image and
+interface testing remains in progress.
 
 ## Build
 
@@ -29,8 +29,8 @@ completed files. Output folders must already exist.
 
 Synthetic GDI, CUE, BIN, CHD and CDI examples have been extracted, including
 2336-byte CDI sectors. One user-supplied GDI extracted all 144 files on Windows.
-Other real disc variants, Linux operation, performance and the resized UI
-still need verification.
+Other real disc variants, Linux runtime, performance and the resized UI still
+need verification.
 
 ## Third-party notices
 
