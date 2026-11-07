@@ -59,13 +59,27 @@ executable to finish. Use the same pipe with `--info` and `--help`.
 
 ## Build
 
-Use CMake 3.22 or newer and a C++20 compiler:
+Install Git and CMake 3.22 or newer. On Windows, install Visual Studio with
+the Desktop development with C++ workload. On Linux, install a C++20 compiler,
+build tools and SDL's desktop build prerequisites for your distribution.
+
+Run the script for your platform from the repository root.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
+```
 
 ```sh
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-cmake --install build --config Release --prefix dist
+bash ./build.sh
 ```
+
+Both scripts configure a Release build by default and run the tests. Build
+outputs go under `build/windows` or `build/linux`. Windows accepts
+`-Configuration Debug` and `-BuildDirectory <path>`. Linux accepts an optional
+build directory followed by the configuration, for example
+`bash ./build.sh build/linux-debug Debug`.
+
+For Ninja builds with MSVC, use a Visual Studio Developer PowerShell.
 
 The first build fetches pinned SDL3, libchdr and stb source. SDL3, libchdr and
 the Windows C++ runtime are linked statically. Linux system libraries remain
