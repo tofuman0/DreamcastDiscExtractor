@@ -1,0 +1,77 @@
+cmake_minimum_required(VERSION 3.22)
+project(Txr2DiscExtractor LANGUAGES C CXX)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(SDL_SHARED OFF CACHE BOOL "" FORCE)
+set(SDL_STATIC ON CACHE BOOL "" FORCE)
+set(SDL_TEST_LIBRARY OFF CACHE BOOL "" FORCE)
+set(SDL_TESTS OFF CACHE BOOL "" FORCE)
+set(SDL_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+include(FetchContent)
+if(DEFINED SDL_SOURCE_DIR)
+  add_subdirectory("${SDL_SOURCE_DIR}" sdl EXCLUDE_FROM_ALL)
+else()
+  FetchContent_Declare(SDL3 GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+    GIT_TAG f5e5f6588921eed3d7d048ce43d9eb1ff0da0ffc)
+  FetchContent_MakeAvailable(SDL3)
+endif()
+
+set(CHDR_WANT_TESTS OFF CACHE BOOL "" FORCE)
+if(DEFINED CHDR_SOURCE_DIR)
+  add_subdirectory("${CHDR_SOURCE_DIR}" chdr EXCLUDE_FROM_ALL)
+else()
+  FetchContent_Declare(chdr GIT_REPOSITORY https://github.com/rtissera/libchdr.git
+    GIT_TAG 47d794151b2b64f6aba60304e6480f4f5a2bc24b)
+  FetchContent_MakeAvailable(chdr)
+endif()
+
+if(NOT DEFINED STB_SOURCE_DIR)
+  FetchContent_Declare(stb GIT_REPOSITORY https://github.com/nothings/stb.git
+    GIT_TAG 4e9b368bfc071e97206ea5c6adba68dd0cbf8897)
+  FetchContent_MakeAvailable(stb)
+  set(STB_SOURCE_DIR "${stb_SOURCE_DIR}")
+endif()
+
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/Roboto.ttf")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/assets/Roboto.ttf" ROBOTO_HEX HEX)
+string(REGEX REPLACE "(..)" "0x\\1," ROBOTO_BYTES "${ROBOTO_HEX}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/roboto_data.hpp" "#pragma once\ninline constexpr unsigned char RobotoFont[] = {${ROBOTO_BYTES}};\n")
+
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.png")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.png" ICON_HEX HEX)
+string(REGEX REPLACE "(..)" "0x\\1," ICON_BYTES "${ICON_HEX}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/app_icon_data.hpp" "#pragma once\ninline constexpr unsigned char ApplicationIcon[] = {${ICON_BYTES}};\n")
+
+add_library(disc_reader STATIC gdi.cpp cue.cpp chd.cpp cdi.cpp image.cpp)
+target_link_libraries(disc_reader PRIVATE chdr-static)
+target_include_directories(disc_reader PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_executable(disc_extractor WIN32 main.cpp font.cpp icon.cpp)
+if(WIN32)
+  set(ICON_PATH "${CMAKE_CURRENT_SOURCE_DIR}/assets/app-icon.ico")
+  configure_file(icon.rc.in "${CMAKE_CURRENT_BINARY_DIR}/icon.rc" @ONLY)
+  target_sources(disc_extractor PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/icon.rc")
+  set_property(SOURCE "${CMAKE_CURRENT_BINARY_DIR}/icon.rc" APPEND PROPERTY OBJECT_DEPENDS "${ICON_PATH}")
+endif()
+target_include_directories(disc_extractor PRIVATE "${STB_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
+target_link_libraries(disc_extractor PRIVATE disc_reader SDL3::SDL3-static)
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(gdi_tests gdi_tests.cpp)
+  target_link_libraries(gdi_tests PRIVATE disc_reader)
+  add_test(NAME gdi_tests COMMAND gdi_tests)
+endif()
+if(MINGW)
+  target_link_options(disc_extractor PRIVATE -static)
+endif()
+set(DISC_EXTRACTOR_OUTPUT_NAME "Dreamcast Disc Extractor" CACHE STRING "Extractor executable name")
+set_target_properties(disc_extractor PROPERTIES OUTPUT_NAME "${DISC_EXTRACTOR_OUTPUT_NAME}")
+
+install(TARGETS disc_extractor RUNTIME DESTINATION .)
+install(FILES README.md LICENSE-SDL.txt LICENSE-libchdr.txt LICENSE-MPL-2.0.txt
+  LICENSE-LZMA.txt LICENSE-miniz.txt LICENSE-dr-flac.txt LICENSE-stb.txt LICENSE-zstd.txt
+  DESTINATION .)
+install(FILES assets/OFL.txt DESTINATION . RENAME LICENSE-Roboto.txt)
